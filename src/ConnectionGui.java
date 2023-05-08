@@ -2,20 +2,21 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 
 public class ConnectionGui {
-    JFrame frame = new JFrame("FTP Client - Connection");
-    JPanel mainPanel = new JPanel(new GridLayout(15,1));
-    JLabel serverAddressLabel = new JLabel("Server Address");
-    JLabel serverPortLabel = new JLabel("Server Port (Default: 21)");
-    JTextField serverAddress = new JTextField();
-    JTextField serverPort = new JTextField("21");
-    JLabel usernameLabel = new JLabel("Username");
-    JLabel passwordLabel = new JLabel("Password");
-    JTextField username = new JTextField();
-    JPasswordField password = new JPasswordField();
-    JButton connect = new JButton("Connect");
-    JLabel errorLabel = new JLabel("", SwingConstants.CENTER);
+    private JFrame frame = new JFrame("FTP Client - Connection");
+    private JPanel mainPanel = new JPanel(new GridLayout(15,1));
+    private JLabel serverAddressLabel = new JLabel("Server Address");
+    private JLabel serverPortLabel = new JLabel("Server Port (Default: 21)");
+    private JTextField serverAddress = new JTextField();
+    private JTextField serverPort = new JTextField("21");
+    private JLabel usernameLabel = new JLabel("Username");
+    private JLabel passwordLabel = new JLabel("Password");
+    private JTextField username = new JTextField();
+    private JPasswordField password = new JPasswordField();
+    private JButton connect = new JButton("Connect");
+    private JLabel errorLabel = new JLabel("", SwingConstants.CENTER);
     public ConnectionGui(){
         frame.setVisible(true);
         frame.setSize(400,400);
@@ -42,11 +43,15 @@ public class ConnectionGui {
         mainPanel.add(errorLabel);
         mainPanel.add(new JLabel());
         frame.add(connect, BorderLayout.SOUTH);
+        frame.setLocationRelativeTo(null);
+        frame.getRootPane().setDefaultButton(connect);
         connect.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try{
-                    Connection c = new Connection(username.getText(), password.getText(), serverAddress.getText(), serverPort.getText());
+                    FTPConnection c = new FTPConnection(username.getText(), password.getText(), serverAddress.getText(), serverPort.getText());
                     c.connect();
+                    new FTPGui("FTP Session - Connected to: " + serverAddress.getText() + " logged in as: " + username.getText(), c.getFtp());
+                    frame.setVisible(false);
                 }catch(Exception ex){
                     errorLabel.setFont(new Font("Sans-Serif", Font.BOLD, 12));
                     errorLabel.setForeground(Color.RED);
