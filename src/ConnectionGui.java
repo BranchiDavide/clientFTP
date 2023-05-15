@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowEvent;
 
 public class ConnectionGui {
     private JFrame frame = new JFrame("FTP Client - Connection");
@@ -18,7 +17,6 @@ public class ConnectionGui {
     private JButton connect = new JButton("Connect");
     private JLabel errorLabel = new JLabel("", SwingConstants.CENTER);
     public ConnectionGui(){
-        frame.setVisible(true);
         frame.setSize(400,400);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
@@ -45,6 +43,8 @@ public class ConnectionGui {
         frame.add(connect, BorderLayout.SOUTH);
         frame.setLocationRelativeTo(null);
         frame.getRootPane().setDefaultButton(connect);
+        serverAddress.requestFocus();
+        frame.setVisible(true);
         connect.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try{
