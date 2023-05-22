@@ -1,7 +1,11 @@
+package clientftp.gui;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import clientftp.ftp.FTPConnection;
+import clientftp.ftp.FTPManager;
 
 public class ConnectionGui {
     private JFrame frame = new JFrame("FTP Client - Connection");
@@ -50,7 +54,8 @@ public class ConnectionGui {
                 try{
                     FTPConnection c = new FTPConnection(username.getText(), password.getText(), serverAddress.getText(), serverPort.getText());
                     c.connect();
-                    new FTPGui("FTP Session - Connected to: " + serverAddress.getText() + " logged in as: " + username.getText(), c.getFtp());
+                    FTPManager ftpManager = new FTPManager(c.getFtp());
+                    new FTPGui("FTP Session - Connected to: " + serverAddress.getText() + " logged in as: " + username.getText(), ftpManager);
                     frame.setVisible(false);
                 }catch(Exception ex){
                     errorLabel.setFont(new Font("Sans-Serif", Font.BOLD, 12));

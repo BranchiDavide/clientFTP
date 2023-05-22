@@ -1,3 +1,5 @@
+package clientftp.ftp;
+
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import java.io.IOException;
@@ -8,6 +10,7 @@ public class FTPManager {
     private FTPClient ftp;
     private String[][] tableContent;
     private FTPFile[] ftpFiles;
+    private ArrayList<FTPFile> contentList = new ArrayList();
     public FTPManager(FTPClient ftp){
         this.ftp = ftp;
     }
@@ -24,22 +27,26 @@ public class FTPManager {
                 files.add(ftpFiles[i]);
             }
         }
+        int posEndDir = 0;
         for(int i = 0; i < directories.size(); i++){
             tableContent[i][0] = "Directory";
             tableContent[i][1] = directories.get(i).getName();
             tableContent[i][2] = "";
             tableContent[i][3] = dateFormat.format(directories.get(i).getTimestamp().getTime());
+            contentList.add(directories.get(i));
+            posEndDir++;
         }
         for(int i = 0; i < files.size(); i++){
-            tableContent[tableContent.length - 1 + i][0] = "File";
-            tableContent[tableContent.length - 1 + i][1] = files.get(i).getName();
-            tableContent[tableContent.length - 1 + i][2] = formatSize(files.get(i).getSize());
-            tableContent[tableContent.length - 1 + i][3] = dateFormat.format(files.get(i).getTimestamp().getTime());
+            tableContent[posEndDir + i][0] = "File";
+            tableContent[posEndDir + i][1] = files.get(i).getName();
+            tableContent[posEndDir + i][2] = formatSize(files.get(i).getSize());
+            tableContent[posEndDir + i][3] = dateFormat.format(files.get(i).getTimestamp().getTime());
+            contentList.add(files.get(i));
         }
         return tableContent;
     }
 
-    private static String formatSize(long size) {
+    public static String formatSize(long size) {
         String[] units = {"B", "KB", "MB", "GB", "TB"};
         int unitIndex = 0;
         double formattedSize = size;
@@ -48,5 +55,9 @@ public class FTPManager {
             unitIndex++;
         }
         return String.format("%.2f %s", formattedSize, units[unitIndex]);
+    }
+
+    public FTPFile getFile(int index){
+        return contentList.get(index);
     }
 }

@@ -1,10 +1,13 @@
-import org.apache.commons.net.ftp.FTPClient;
+package clientftp.gui;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import clientftp.ftp.FTPManager;
 
 public class FTPGui {
     private JFrame frame;
@@ -15,8 +18,9 @@ public class FTPGui {
     private JPopupMenu clickPopup = new JPopupMenu();
     private JMenuItem infoMenu = new JMenuItem("Show more information");
     private JMenuItem downloadMenu = new JMenuItem("Download");
-    public FTPGui(String name, FTPClient ftp){
-        ftpManager = new FTPManager(ftp);
+    private int infoIndex = 0;
+    public FTPGui(String name, FTPManager ftpManager){
+        this.ftpManager = ftpManager;
         frame = new JFrame(name);
         frame.setVisible(true);
         frame.setSize(1000,600);
@@ -48,9 +52,15 @@ public class FTPGui {
                 if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
                     //Right click on table row
                     clickPopup.show(e.getComponent(), e.getX(), e.getY());
+                    infoIndex = rowindex;
                 }else{
                     //Left click on table row
                 }
+            }
+        });
+        infoMenu.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e) {
+                FileInfoGui fig = new FileInfoGui(ftpManager.getFile(infoIndex));
             }
         });
     }
@@ -63,5 +73,14 @@ public class FTPGui {
             }
         };
         fileTable.setModel(tableModel);
+        //Type colum width
+        fileTable.getColumnModel().getColumn(0).setMinWidth(150);
+        fileTable.getColumnModel().getColumn(0).setMaxWidth(150);
+        //Size colum width
+        fileTable.getColumnModel().getColumn(2).setMinWidth(150);
+        fileTable.getColumnModel().getColumn(2).setMaxWidth(150);
+        //Last Modified colum width
+        fileTable.getColumnModel().getColumn(3).setMinWidth(200);
+        fileTable.getColumnModel().getColumn(3).setMaxWidth(200);
     }
 }
