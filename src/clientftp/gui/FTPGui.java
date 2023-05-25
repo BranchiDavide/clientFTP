@@ -7,7 +7,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+
 import clientftp.ftp.FTPManager;
+import org.apache.commons.net.ftp.FTPClient;
 
 public class FTPGui {
     private JFrame frame;
@@ -18,7 +21,8 @@ public class FTPGui {
     private JPopupMenu clickPopup = new JPopupMenu();
     private JMenuItem infoMenu = new JMenuItem("Show more information");
     private JMenuItem downloadMenu = new JMenuItem("Download");
-    private int infoIndex = 0;
+    private int rowClickIndex = 0;
+    private DefaultTableModel tableModel;
     public FTPGui(String name, FTPManager ftpManager){
         this.ftpManager = ftpManager;
         frame = new JFrame(name);
@@ -29,7 +33,7 @@ public class FTPGui {
             data = ftpManager.getFiles();
             fileTable = new JTable(data, columnNames);
         }catch(Exception e){
-            System.out.println(e.getMessage());
+            showError("Loading Error", "Unable to load the table");
         }
         frame.add(new JScrollPane(fileTable));
         fileTable.setFont(new Font("Sans-Serif", Font.PLAIN, 14));
@@ -52,21 +56,36 @@ public class FTPGui {
                 if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
                     //Right click on table row
                     clickPopup.show(e.getComponent(), e.getX(), e.getY());
-                    infoIndex = rowindex;
+                    rowClickIndex = rowindex;
                 }else{
+                    rowClickIndex = rowindex;
                     //Left click on table row
+                    if(ftpManager.getFile(rowClickIndex).isDirectory()){
+                        try{
+                            //Change the directory
+                            ftpManager.changeDir(ftpManager.getFile(rowClickIndex).getName());
+                            //Update the table
+                            data = ftpManager.getFiles();
+                            tableModel.setRowCount(0);
+                            for(Object[] row : data){
+                                tableModel.addRow(row);
+                            }
+                        }catch(IOException ex){
+                            showError("Change Directory Error", "Unable to enter the directory");
+                        }
+                    }
                 }
             }
         });
         infoMenu.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
-                FileInfoGui fig = new FileInfoGui(ftpManager.getFile(infoIndex));
+                FileInfoGui fig = new FileInfoGui(ftpManager.getFile(rowClickIndex));
             }
         });
     }
     private void setTableModel(){
         //Model for making table cells not editable
-        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
+        tableModel = new DefaultTableModel(data, columnNames) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -82,5 +101,9 @@ public class FTPGui {
         //Last Modified colum width
         fileTable.getColumnModel().getColumn(3).setMinWidth(200);
         fileTable.getColumnModel().getColumn(3).setMaxWidth(200);
+    }
+    public void showError(String header, String message){
+        JOptionPane.showMessageDialog(frame, message,
+                header, JOptionPane.ERROR_MESSAGE);
     }
 }
