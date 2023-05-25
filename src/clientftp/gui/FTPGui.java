@@ -8,9 +8,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import clientftp.ftp.FTPManager;
-import org.apache.commons.net.ftp.FTPClient;
 
 public class FTPGui {
     private JFrame frame;
@@ -23,10 +24,17 @@ public class FTPGui {
     private JMenuItem downloadMenu = new JMenuItem("Download");
     private int rowClickIndex = 0;
     private DefaultTableModel tableModel;
+    private JMenuBar menuBar = new JMenuBar();
+    private JMenu settingsMenu = new JMenu("Settings");
+    private JMenuItem setDwPath = new JMenuItem("Set download path");
     public FTPGui(String name, FTPManager ftpManager){
         this.ftpManager = ftpManager;
         frame = new JFrame(name);
         frame.setVisible(true);
+        frame.setLayout(new BorderLayout());
+        settingsMenu.add(setDwPath);
+        menuBar.add(settingsMenu);
+        frame.add(menuBar, BorderLayout.NORTH);
         frame.setSize(1000,600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         try{
@@ -35,7 +43,7 @@ public class FTPGui {
         }catch(Exception e){
             showError("Loading Error", "Unable to load the table");
         }
-        frame.add(new JScrollPane(fileTable));
+        frame.add(new JScrollPane(fileTable), BorderLayout.CENTER);
         fileTable.setFont(new Font("Sans-Serif", Font.PLAIN, 14));
         clickPopup.add(infoMenu);
         clickPopup.add(downloadMenu);
@@ -55,7 +63,9 @@ public class FTPGui {
                     return;
                 if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
                     //Right click on table row
-                    clickPopup.show(e.getComponent(), e.getX(), e.getY());
+                    if(!ftpManager.getFile(rowindex).getName().equals("..")){
+                        clickPopup.show(e.getComponent(), e.getX(), e.getY());
+                    }
                     rowClickIndex = rowindex;
                 }else{
                     rowClickIndex = rowindex;
@@ -82,6 +92,36 @@ public class FTPGui {
                 FileInfoGui fig = new FileInfoGui(ftpManager.getFile(rowClickIndex));
             }
         });
+        downloadMenu.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try{
+                    ftpManager.downloadFile(rowClickIndex);
+                    showSuccess("Download successful", "The file " + ftpManager.getFile(rowClickIndex).getName()
+                            + " has been downloaded successfully!\n" + ftpManager.getDownloadPath() + ftpManager.getFile(rowClickIndex).getName());
+                }catch(IOException ex){
+                    showError("Download error", "Unable to download the file");
+                }
+            }
+        });
+        setDwPath.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                UIManager.put("OptionPane.minimumSize",new Dimension(600,100));
+                String path = JOptionPane.showInputDialog(null,"Current download path: " + ftpManager.getDownloadPath() + "\nSet download directory path", "Settings", JOptionPane.QUESTION_MESSAGE);
+                if(path != null){
+                    if(Files.exists(Paths.get(path)) && path.length() > 0){
+                        try{
+                            ftpManager.setDownloadPath(path);
+                        }catch(IOException ex){
+                            showError("Settings error", "Unable to write settings file");
+                        }
+                    }else{
+                        showError("Settings error", "The path doesn't exists!");
+                    }
+                }
+            }
+        });
     }
     private void setTableModel(){
         //Model for making table cells not editable
@@ -103,7 +143,13 @@ public class FTPGui {
         fileTable.getColumnModel().getColumn(3).setMaxWidth(200);
     }
     public void showError(String header, String message){
+        UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         JOptionPane.showMessageDialog(frame, message,
                 header, JOptionPane.ERROR_MESSAGE);
+    }
+    public void showSuccess(String header, String message){
+        UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
+        JOptionPane.showMessageDialog(frame, message,
+                header, JOptionPane.INFORMATION_MESSAGE);
     }
 }

@@ -3,9 +3,12 @@ package clientftp.ftp;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Properties;
 
 public class FTPManager {
     private FTPClient ftp;
@@ -13,10 +16,24 @@ public class FTPManager {
     private FTPFile[] ftpFiles;
     private ArrayList<FTPFile> contentList;
     private ArrayList<String> ftpPath;
-    public FTPManager(FTPClient ftp){
+    private String downloadPath;
+
+    public FTPManager(FTPClient ftp) throws IOException {
         this.ftp = ftp;
         ftpPath = new ArrayList<>();
         ftpPath.add("/");
+        //Load settings from settings.xml file
+        Properties loadProps = new Properties();
+        loadProps.loadFromXML(new FileInputStream("settings.xml"));
+        String settingsPath = loadProps.getProperty("downloadPath");
+        if(settingsPath.equals("")){
+            Properties saveProps = new Properties();
+            saveProps.setProperty("downloadPath", System.getProperty("user.home") + "\\");
+            saveProps.storeToXML(new FileOutputStream("settings.xml"), "");
+            downloadPath = System.getProperty("user.home") + "\\";
+        }else{
+            downloadPath = settingsPath;
+        }
     }
     public String[][] getFiles() throws IOException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy - HH:mm");
@@ -88,5 +105,25 @@ public class FTPManager {
             ftpPath.add(path);
             ftpPath.add("/");
         }
+    }
+
+    public void downloadFile(int index) throws IOException {
+        FileOutputStream fos = new FileOutputStream(downloadPath + contentList.get(index).getName());
+        ftp.retrieveFile("/" + contentList.get(index).getName(), fos);
+        fos.close();
+    }
+
+    public String getDownloadPath() {
+        return downloadPath;
+    }
+
+    public void setDownloadPath(String downloadPath) throws IOException {
+        if(!Character.toString(downloadPath.charAt(downloadPath.length()-1)).equals("\\")){
+            downloadPath += "\\";
+        }
+        Properties saveProps = new Properties();
+        saveProps.setProperty("downloadPath", downloadPath);
+        saveProps.storeToXML(new FileOutputStream("settings.xml"), "");
+        this.downloadPath = downloadPath;
     }
 }
