@@ -3,9 +3,9 @@ package clientftp.ftp;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -44,7 +44,9 @@ public class FTPManager {
         ArrayList<FTPFile> directories = new ArrayList();
         for(int i = 0; i < ftpFiles.length; i++){
             if(ftpFiles[i].isDirectory()){
-                directories.add(ftpFiles[i]);
+                if(!ftpFiles[i].getName().equals(".") && !ftpFiles[i].getName().equals("..")){
+                    directories.add(ftpFiles[i]);
+                }
             }else{
                 files.add(ftpFiles[i]);
             }
@@ -108,8 +110,37 @@ public class FTPManager {
     }
 
     public void downloadFile(int index) throws IOException {
-        FileOutputStream fos = new FileOutputStream(downloadPath + contentList.get(index).getName());
-        ftp.retrieveFile("/" + contentList.get(index).getName(), fos);
+        if(contentList.get(index).isDirectory()){
+            downloadDir(getFtpPathString() + contentList.get(index).getName(), downloadPath + contentList.get(index).getName());
+        }else{
+            FileOutputStream fos = new FileOutputStream(downloadPath + contentList.get(index).getName());
+            ftp.retrieveFile(getFtpPathString() + contentList.get(index).getName(), fos);
+            fos.close();
+        }
+    }
+
+    private void downloadDir(String rPath, String lPath) throws IOException {
+        FTPFile[] dirFiles = ftp.listFiles(rPath);
+        for(FTPFile f : dirFiles){
+            if(f.isDirectory()){
+                if(!f.getName().equals("..") && !f.getName().equals(".")){
+                    if(!Files.exists(Paths.get(lPath + "/" + f.getName()))){
+                        Files.createDirectories(Paths.get(lPath + "/" + f.getName()));
+                    }
+                    downloadDir(rPath + "/" + f.getName(), lPath + "/" + f.getName());
+                }
+            }else{
+                if(!Files.exists(Paths.get(lPath))){
+                    Files.createDirectories(Paths.get(lPath));
+                }
+                downloadDirFile(rPath + "/" + f.getName(), lPath + "/" + f.getName());
+            }
+        }
+    }
+
+    private void downloadDirFile(String rPath, String lPath) throws IOException {
+        FileOutputStream fos = new FileOutputStream(lPath);
+        ftp.retrieveFile(rPath, fos);
         fos.close();
     }
 
@@ -125,5 +156,12 @@ public class FTPManager {
         saveProps.setProperty("downloadPath", downloadPath);
         saveProps.storeToXML(new FileOutputStream("settings.xml"), "");
         this.downloadPath = downloadPath;
+    }
+    public String getFtpPathString(){
+        String out = "";
+        for(String element : ftpPath){
+            out += element;
+        }
+        return out;
     }
 }

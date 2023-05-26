@@ -27,6 +27,7 @@ public class FTPGui {
     private JMenuBar menuBar = new JMenuBar();
     private JMenu settingsMenu = new JMenu("Settings");
     private JMenuItem setDwPath = new JMenuItem("Set download path");
+    private JProgressBar pb = new JProgressBar();
     public FTPGui(String name, FTPManager ftpManager){
         this.ftpManager = ftpManager;
         frame = new JFrame(name);
@@ -78,7 +79,9 @@ public class FTPGui {
                             data = ftpManager.getFiles();
                             tableModel.setRowCount(0);
                             for(Object[] row : data){
-                                tableModel.addRow(row);
+                                if(row[0] != null){
+                                    tableModel.addRow(row);
+                                }
                             }
                         }catch(IOException ex){
                             showError("Change Directory Error", "Unable to enter the directory");
