@@ -28,6 +28,7 @@ public class FTPGui {
     private JMenu settingsMenu = new JMenu("Settings");
     private JMenuItem setDwPath = new JMenuItem("Set download path");
     private JProgressBar pb = new JProgressBar();
+    private boolean areEventsDisabled = false;
     public FTPGui(String name, FTPManager ftpManager){
         this.ftpManager = ftpManager;
         frame = new JFrame(name);
@@ -36,6 +37,9 @@ public class FTPGui {
         settingsMenu.add(setDwPath);
         menuBar.add(settingsMenu);
         frame.add(menuBar, BorderLayout.NORTH);
+        frame.add(pb, BorderLayout.SOUTH);
+        pb.setSize(1000,100);
+        pb.setVisible(false);
         frame.setSize(1000,600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         try{
@@ -53,58 +57,84 @@ public class FTPGui {
         fileTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
-                int r = fileTable.rowAtPoint(e.getPoint());
-                if (r >= 0 && r < fileTable.getRowCount()) {
-                    fileTable.setRowSelectionInterval(r, r);
-                } else {
-                    fileTable.clearSelection();
-                }
-                int rowindex = fileTable.getSelectedRow();
-                if (rowindex < 0)
-                    return;
-                if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
-                    //Right click on table row
-                    if(!ftpManager.getFile(rowindex).getName().equals("..")){
-                        clickPopup.show(e.getComponent(), e.getX(), e.getY());
+                if(!areEventsDisabled){
+                    int r = fileTable.rowAtPoint(e.getPoint());
+                    if (r >= 0 && r < fileTable.getRowCount()) {
+                        fileTable.setRowSelectionInterval(r, r);
+                    } else {
+                        fileTable.clearSelection();
                     }
-                    rowClickIndex = rowindex;
-                }else{
-                    rowClickIndex = rowindex;
-                    //Left click on table row
-                    if(ftpManager.getFile(rowClickIndex).isDirectory()){
-                        try{
-                            //Change the directory
-                            ftpManager.changeDir(ftpManager.getFile(rowClickIndex).getName());
-                            //Update the table
-                            data = ftpManager.getFiles();
-                            tableModel.setRowCount(0);
-                            for(Object[] row : data){
-                                if(row[0] != null){
-                                    tableModel.addRow(row);
+                    int rowindex = fileTable.getSelectedRow();
+                    if (rowindex < 0)
+                        return;
+                    if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
+                        //Right click on table row
+                        if(!ftpManager.getFile(rowindex).getName().equals("..")){
+                            clickPopup.show(e.getComponent(), e.getX(), e.getY());
+                        }
+                        rowClickIndex = rowindex;
+                    }else{
+                        rowClickIndex = rowindex;
+                        //Left click on table row
+                        if(ftpManager.getFile(rowClickIndex).isDirectory()){
+                            try{
+                                //Change the directory
+                                ftpManager.changeDir(ftpManager.getFile(rowClickIndex).getName());
+                                //Update the table
+                                data = ftpManager.getFiles();
+                                tableModel.setRowCount(0);
+                                for(Object[] row : data){
+                                    if(row[0] != null){
+                                        tableModel.addRow(row);
+                                    }
                                 }
+                            }catch(IOException ex){
+                                showError("Change Directory Error", "Unable to enter the directory");
                             }
-                        }catch(IOException ex){
-                            showError("Change Directory Error", "Unable to enter the directory");
                         }
                     }
+                }else{
+                    showWarning("Download in progress", "Please wait until the download finishes");
                 }
             }
         });
         infoMenu.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
-                FileInfoGui fig = new FileInfoGui(ftpManager.getFile(rowClickIndex));
+                try{
+                    FileInfoGui fig = new FileInfoGui(ftpManager.getFile(rowClickIndex));
+                }catch(IOException ex){
+                    showError("Information error", "Unable to load some or all the information");
+                }
             }
         });
         downloadMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try{
-                    ftpManager.downloadFile(rowClickIndex);
-                    showSuccess("Download successful", "The file " + ftpManager.getFile(rowClickIndex).getName()
-                            + " has been downloaded successfully!\n" + ftpManager.getDownloadPath() + ftpManager.getFile(rowClickIndex).getName());
-                }catch(IOException ex){
-                    showError("Download error", "Unable to download the file");
-                }
+                //Thread for the file and directory download
+                Thread trd = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            areEventsDisabled = true;
+                            ftpManager.downloadFile(rowClickIndex, pb);
+                            if(ftpManager.getFile(rowClickIndex).isDirectory()){
+                                showSuccess("Download successful", "The directory " + ftpManager.getFile(rowClickIndex).getName()
+                                        + " has been downloaded successfully!\n" + ftpManager.getDownloadPath() + ftpManager.getFile(rowClickIndex).getName());
+
+                            }else{
+                                showSuccess("Download successful", "The file " + ftpManager.getFile(rowClickIndex).getName()
+                                        + " has been downloaded successfully!\n" + ftpManager.getDownloadPath() + ftpManager.getFile(rowClickIndex).getName());
+
+                            }
+                        } catch (IOException ex) {
+                            showError("Download error", "Unable to download the file");
+                        }finally{
+                            areEventsDisabled = false;
+                            pb.setVisible(false);
+                        }
+                    }
+                });
+                trd.start();
             }
         });
         setDwPath.addActionListener(new ActionListener() {
@@ -154,5 +184,10 @@ public class FTPGui {
         UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         JOptionPane.showMessageDialog(frame, message,
                 header, JOptionPane.INFORMATION_MESSAGE);
+    }
+    public void showWarning(String header, String message){
+        UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
+        JOptionPane.showMessageDialog(frame, message,
+                header, JOptionPane.WARNING_MESSAGE);
     }
 }

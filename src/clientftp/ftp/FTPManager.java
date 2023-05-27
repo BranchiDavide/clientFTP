@@ -3,6 +3,8 @@ package clientftp.ftp;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -11,13 +13,14 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 public class FTPManager {
-    private FTPClient ftp;
+    private static FTPClient ftp;
     private String[][] tableContent;
     private FTPFile[] ftpFiles;
     private ArrayList<FTPFile> contentList;
-    private ArrayList<String> ftpPath;
+    private static ArrayList<String> ftpPath;
     private String downloadPath;
-
+    private int tmpProgress = 0;
+    private JProgressBar pb;
     public FTPManager(FTPClient ftp) throws IOException {
         this.ftp = ftp;
         ftpPath = new ArrayList<>();
@@ -109,14 +112,23 @@ public class FTPManager {
         }
     }
 
-    public void downloadFile(int index) throws IOException {
+    public void downloadFile(int index, JProgressBar pb) throws IOException {
+        this.pb = pb;
+        tmpProgress = 0;
+        pb.setVisible(true);
+        pb.setValue(0);
+        pb.setForeground(Color.GREEN);
         if(contentList.get(index).isDirectory()){
+            pb.setMaximum(getDirTotalFiles(getFtpPathString() + contentList.get(index).getName()));
             downloadDir(getFtpPathString() + contentList.get(index).getName(), downloadPath + contentList.get(index).getName());
         }else{
+            pb.setMaximum(1);
             FileOutputStream fos = new FileOutputStream(downloadPath + contentList.get(index).getName());
             ftp.retrieveFile(getFtpPathString() + contentList.get(index).getName(), fos);
             fos.close();
+            pb.setValue(1);
         }
+        pb.setVisible(false);
     }
 
     private void downloadDir(String rPath, String lPath) throws IOException {
@@ -142,6 +154,8 @@ public class FTPManager {
         FileOutputStream fos = new FileOutputStream(lPath);
         ftp.retrieveFile(rPath, fos);
         fos.close();
+        tmpProgress++;
+        pb.setValue(tmpProgress);
     }
 
     public String getDownloadPath() {
@@ -157,11 +171,45 @@ public class FTPManager {
         saveProps.storeToXML(new FileOutputStream("settings.xml"), "");
         this.downloadPath = downloadPath;
     }
-    public String getFtpPathString(){
+    public static String getFtpPathString(){
         String out = "";
         for(String element : ftpPath){
             out += element;
         }
         return out;
+    }
+    public static long getDirTotalSize(String rPath) throws IOException {
+        FTPFile[] files = ftp.listFiles(rPath);
+        long totalSize = 0;
+        if (files != null && files.length > 0) {
+            for (FTPFile file : files) {
+                if(!file.getName().equals("..") && !file.getName().equals(".")){
+                    String remoteFilePath = rPath + "/" + file.getName();
+                    if (file.isFile()) {
+                        totalSize += file.getSize();
+                    } else if (file.isDirectory()) {
+                        totalSize += getDirTotalSize(remoteFilePath);
+                    }
+                }
+            }
+        }
+        return totalSize;
+    }
+    public static int getDirTotalFiles(String rPath) throws IOException {
+        FTPFile[] files = ftp.listFiles(rPath);
+        int totalFiles = 0;
+        if (files != null && files.length > 0) {
+            for (FTPFile file : files) {
+                if(!file.getName().equals("..") && !file.getName().equals(".")){
+                    String remoteFilePath = rPath + "/" + file.getName();
+                    if (file.isFile()) {
+                        totalFiles++;
+                    } else if (file.isDirectory()) {
+                        totalFiles += getDirTotalFiles(remoteFilePath);
+                    }
+                }
+            }
+        }
+        return totalFiles;
     }
 }

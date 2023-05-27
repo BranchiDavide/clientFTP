@@ -4,6 +4,7 @@ import org.apache.commons.net.ftp.FTPFile;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 
 import clientftp.ftp.FTPManager;
@@ -20,7 +21,7 @@ public class FileInfoGui {
     private JLabel group;
     private ImageIcon icn;
     private Image scaleImage;
-    public FileInfoGui(FTPFile file){
+    public FileInfoGui(FTPFile file) throws IOException {
         this.file = file;
         frame = new JFrame(file.getName() + " - information");
         frame.setSize(400,500);
@@ -35,7 +36,7 @@ public class FileInfoGui {
         }
         scaleImage = icn.getImage().getScaledInstance(70, 70,Image.SCALE_DEFAULT);
         icn = new ImageIcon(scaleImage);
-        fileSize = new JLabel("File size: " + (file.isDirectory() ? "-" : FTPManager.formatSize(file.getSize())));
+        fileSize = new JLabel("File size: " + (file.isDirectory() ? "Loading..." : FTPManager.formatSize(file.getSize())));
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy - HH:mm");
         lastModified = new JLabel("Last modified: " + dateFormat.format(file.getTimestamp().getTime()));
         permission = new JLabel("Permission: " +  file.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION));
@@ -50,5 +51,23 @@ public class FileInfoGui {
         frame.add(owner);
         frame.add(group);
         frame.setVisible(true);
+        if(file.isDirectory()){
+            //New thread for loading the directory size without blocking the GUI loading
+            Thread trd = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        loadDirSize();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException(e);
+                    }
+                }
+            });
+            trd.start();
+        }
+    }
+    private void loadDirSize() throws IOException {
+        fileSize.setText("File size: " + FTPManager.formatSize(FTPManager.getDirTotalSize(FTPManager.getFtpPathString() + "/" + file.getName())) + " | Total files: " + FTPManager.getDirTotalFiles(FTPManager.getFtpPathString() + "/" + file.getName()));
     }
 }
