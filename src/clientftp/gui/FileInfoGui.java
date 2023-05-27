@@ -12,6 +12,7 @@ import clientftp.ftp.FTPManager;
 public class FileInfoGui {
     private JFrame frame;
     private FTPFile file;
+    private FTPManager ftpManager;
     private JLabel fileName;
     private JLabel fileType;
     private JLabel fileSize;
@@ -21,8 +22,9 @@ public class FileInfoGui {
     private JLabel group;
     private ImageIcon icn;
     private Image scaleImage;
-    public FileInfoGui(FTPFile file) throws IOException {
+    public FileInfoGui(FTPFile file, FTPManager ftpManager) throws IOException {
         this.file = file;
+        this.ftpManager = ftpManager;
         frame = new JFrame(file.getName() + " - information");
         frame.setSize(400,500);
         frame.setResizable(false);
@@ -36,7 +38,7 @@ public class FileInfoGui {
         }
         scaleImage = icn.getImage().getScaledInstance(70, 70,Image.SCALE_DEFAULT);
         icn = new ImageIcon(scaleImage);
-        fileSize = new JLabel("File size: " + (file.isDirectory() ? "Loading..." : FTPManager.formatSize(file.getSize())));
+        fileSize = new JLabel("File size: " + (file.isDirectory() ? "Loading..." : ftpManager.formatSize(file.getSize())));
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy - HH:mm");
         lastModified = new JLabel("Last modified: " + dateFormat.format(file.getTimestamp().getTime()));
         permission = new JLabel("Permission: " +  file.hasPermission(FTPFile.USER_ACCESS, FTPFile.READ_PERMISSION));
@@ -68,6 +70,7 @@ public class FileInfoGui {
         }
     }
     private void loadDirSize() throws IOException {
-        fileSize.setText("File size: " + FTPManager.formatSize(FTPManager.getDirTotalSize(FTPManager.getFtpPathString() + "/" + file.getName())) + " | Total files: " + FTPManager.getDirTotalFiles(FTPManager.getFtpPathString() + "/" + file.getName()));
+        fileSize.setText("File size: " + ftpManager.formatSize(ftpManager.getDirTotalSize(ftpManager.getFtpPathString()
+                + "/" + file.getName())) + " | Total files: " + ftpManager.getDirTotalFiles(ftpManager.getFtpPathString() + "/" + file.getName()));
     }
 }

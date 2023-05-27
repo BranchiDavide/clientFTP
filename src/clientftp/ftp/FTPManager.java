@@ -1,5 +1,6 @@
 package clientftp.ftp;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
@@ -13,11 +14,11 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 public class FTPManager {
-    private static FTPClient ftp;
+    private FTPClient ftp;
     private String[][] tableContent;
     private FTPFile[] ftpFiles;
     private ArrayList<FTPFile> contentList;
-    private static ArrayList<String> ftpPath;
+    private ArrayList<String> ftpPath;
     private String downloadPath;
     private int tmpProgress = 0;
     private JProgressBar pb;
@@ -37,6 +38,7 @@ public class FTPManager {
         }else{
             downloadPath = settingsPath;
         }
+        ftp.setFileType(FTP.BINARY_FILE_TYPE);
     }
     public String[][] getFiles() throws IOException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy - HH:mm");
@@ -85,7 +87,7 @@ public class FTPManager {
         return tableContent;
     }
 
-    public static String formatSize(long size) {
+    public String formatSize(long size) {
         String[] units = {"B", "KB", "MB", "GB", "TB"};
         int unitIndex = 0;
         double formattedSize = size;
@@ -112,7 +114,7 @@ public class FTPManager {
         }
     }
 
-    public void downloadFile(int index, JProgressBar pb) throws IOException {
+    public void downloadFileFromGUI(int index, JProgressBar pb) throws IOException {
         this.pb = pb;
         tmpProgress = 0;
         pb.setVisible(true);
@@ -123,9 +125,7 @@ public class FTPManager {
             downloadDir(getFtpPathString() + contentList.get(index).getName(), downloadPath + contentList.get(index).getName());
         }else{
             pb.setMaximum(1);
-            FileOutputStream fos = new FileOutputStream(downloadPath + contentList.get(index).getName());
-            ftp.retrieveFile(getFtpPathString() + contentList.get(index).getName(), fos);
-            fos.close();
+            downloadFile(getFtpPathString() + contentList.get(index).getName(),downloadPath + contentList.get(index).getName());
             pb.setValue(1);
         }
         pb.setVisible(false);
@@ -145,12 +145,12 @@ public class FTPManager {
                 if(!Files.exists(Paths.get(lPath))){
                     Files.createDirectories(Paths.get(lPath));
                 }
-                downloadDirFile(rPath + "/" + f.getName(), lPath + "/" + f.getName());
+                downloadFile(rPath + "/" + f.getName(), lPath + "/" + f.getName());
             }
         }
     }
 
-    private void downloadDirFile(String rPath, String lPath) throws IOException {
+    private void downloadFile(String rPath, String lPath) throws IOException {
         FileOutputStream fos = new FileOutputStream(lPath);
         ftp.retrieveFile(rPath, fos);
         fos.close();
@@ -171,14 +171,14 @@ public class FTPManager {
         saveProps.storeToXML(new FileOutputStream("settings.xml"), "");
         this.downloadPath = downloadPath;
     }
-    public static String getFtpPathString(){
+    public String getFtpPathString(){
         String out = "";
         for(String element : ftpPath){
             out += element;
         }
         return out;
     }
-    public static long getDirTotalSize(String rPath) throws IOException {
+    public long getDirTotalSize(String rPath) throws IOException {
         FTPFile[] files = ftp.listFiles(rPath);
         long totalSize = 0;
         if (files != null && files.length > 0) {
@@ -195,7 +195,7 @@ public class FTPManager {
         }
         return totalSize;
     }
-    public static int getDirTotalFiles(String rPath) throws IOException {
+    public int getDirTotalFiles(String rPath) throws IOException {
         FTPFile[] files = ftp.listFiles(rPath);
         int totalFiles = 0;
         if (files != null && files.length > 0) {
@@ -211,5 +211,28 @@ public class FTPManager {
             }
         }
         return totalFiles;
+    }
+    public void disconnectFromServer() throws IOException {
+        ftp.disconnect();
+    }
+    public void uploadFile(String rPath, File file) throws IOException {
+        InputStream is = new FileInputStream(file);
+        ftp.storeFile(rPath, is);
+        is.close();
+    }
+    public void uploadDirectory(String rPath, File directory) throws IOException {
+        File[] files = directory.listFiles();
+        ftp.makeDirectory(rPath);
+        if (files != null && files.length > 0) {
+            for (File file : files) {
+                if (file.isFile()) {
+                    uploadFile(rPath + "/" + file.getName(), file);
+                } else if (file.isDirectory()) {
+                    String subDirectoryPath = rPath + "/" + file.getName();
+                    ftp.makeDirectory(subDirectoryPath);
+                    uploadDirectory(subDirectoryPath, file);
+                }
+            }
+        }
     }
 }

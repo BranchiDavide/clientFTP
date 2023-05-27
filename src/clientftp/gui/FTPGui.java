@@ -7,11 +7,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import clientftp.ftp.FTPManager;
+import clientftp.Main;
 
 public class FTPGui {
     private JFrame frame;
@@ -26,9 +28,13 @@ public class FTPGui {
     private DefaultTableModel tableModel;
     private JMenuBar menuBar = new JMenuBar();
     private JMenu settingsMenu = new JMenu("Settings");
+    private JButton disconnectMenu = new JButton("Disconnect");
+    private JButton uploadMenu = new JButton("Upload");
     private JMenuItem setDwPath = new JMenuItem("Set download path");
     private JProgressBar pb = new JProgressBar();
     private boolean areEventsDisabled = false;
+    private JLabel displaiedPath = new JLabel("Remote path: /");
+    private JFileChooser fChooser = new JFileChooser();
     public FTPGui(String name, FTPManager ftpManager){
         this.ftpManager = ftpManager;
         frame = new JFrame(name);
@@ -40,6 +46,14 @@ public class FTPGui {
         frame.add(pb, BorderLayout.SOUTH);
         pb.setSize(1000,100);
         pb.setVisible(false);
+        menuBar.add(new JLabel("       "));
+        menuBar.add(uploadMenu);
+        menuBar.add(new JLabel("       "));
+        menuBar.add(disconnectMenu);
+        menuBar.add(new JLabel("       "));
+        menuBar.add(displaiedPath);
+        fChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fChooser.setDialogTitle("Upload a files or directories");
         frame.setSize(1000,600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         try{
@@ -81,27 +95,22 @@ public class FTPGui {
                                 //Change the directory
                                 ftpManager.changeDir(ftpManager.getFile(rowClickIndex).getName());
                                 //Update the table
-                                data = ftpManager.getFiles();
-                                tableModel.setRowCount(0);
-                                for(Object[] row : data){
-                                    if(row[0] != null){
-                                        tableModel.addRow(row);
-                                    }
-                                }
+                                updateTable();
+                                displaiedPath.setText("Remote path: " + ftpManager.getFtpPathString());
                             }catch(IOException ex){
                                 showError("Change Directory Error", "Unable to enter the directory");
                             }
                         }
                     }
                 }else{
-                    showWarning("Download in progress", "Please wait until the download finishes");
+                    showWarning("Operation in progress", "Please wait until the download/upload finishes");
                 }
             }
         });
         infoMenu.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
                 try{
-                    FileInfoGui fig = new FileInfoGui(ftpManager.getFile(rowClickIndex));
+                    FileInfoGui fig = new FileInfoGui(ftpManager.getFile(rowClickIndex), ftpManager);
                 }catch(IOException ex){
                     showError("Information error", "Unable to load some or all the information");
                 }
@@ -116,7 +125,7 @@ public class FTPGui {
                     public void run() {
                         try {
                             areEventsDisabled = true;
-                            ftpManager.downloadFile(rowClickIndex, pb);
+                            ftpManager.downloadFileFromGUI(rowClickIndex, pb);
                             if(ftpManager.getFile(rowClickIndex).isDirectory()){
                                 showSuccess("Download successful", "The directory " + ftpManager.getFile(rowClickIndex).getName()
                                         + " has been downloaded successfully!\n" + ftpManager.getDownloadPath() + ftpManager.getFile(rowClickIndex).getName());
@@ -127,7 +136,7 @@ public class FTPGui {
 
                             }
                         } catch (IOException ex) {
-                            showError("Download error", "Unable to download the file");
+                            showError("Download error", "Unable to download the file or the directory");
                         }finally{
                             areEventsDisabled = false;
                             pb.setVisible(false);
@@ -153,6 +162,43 @@ public class FTPGui {
                         showError("Settings error", "The path doesn't exists!");
                     }
                 }
+            }
+        });
+        disconnectMenu.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    ftpManager.disconnectFromServer();
+                    frame.dispose();
+                    new Main().main(new String[0]);
+                } catch (IOException ex) {
+                    showError("Disconnection error", "Unable to disconnect from the server");
+                }
+            }
+        });
+        uploadMenu.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int choice = fChooser.showOpenDialog(null);
+                if(choice == JFileChooser.APPROVE_OPTION){
+                    File fileSelected = fChooser.getSelectedFile();
+                    try{
+                        if(fileSelected.isDirectory()){
+                            ftpManager.uploadDirectory(ftpManager.getFtpPathString() + fileSelected.getName(),fileSelected);
+                            showSuccess("Upload successful", "The directory " + fileSelected.getName()
+                                    + " has been uploaded successfully!\n" + ftpManager.getFtpPathString() + fileSelected.getName());
+
+                        }else{
+                            ftpManager.uploadFile(ftpManager.getFtpPathString() + fileSelected.getName(), fileSelected);
+                            showSuccess("Upload successful", "The file " + fileSelected.getName()
+                                    + " has been uploaded successfully!\n" + ftpManager.getFtpPathString() + fileSelected.getName());
+                        }
+                        updateTable();
+                    }catch(IOException ex){
+                        showError("Upload error", "Unable to upload the file or the directory");
+                    }
+                }
+
             }
         });
     }
@@ -189,5 +235,14 @@ public class FTPGui {
         UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         JOptionPane.showMessageDialog(frame, message,
                 header, JOptionPane.WARNING_MESSAGE);
+    }
+    private void updateTable() throws IOException {
+        data = ftpManager.getFiles();
+        tableModel.setRowCount(0);
+        for(Object[] row : data){
+            if(row[0] != null){
+                tableModel.addRow(row);
+            }
+        }
     }
 }

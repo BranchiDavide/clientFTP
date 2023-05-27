@@ -1,3 +1,4 @@
+package clientftp;
 import clientftp.gui.ConnectionGui;
 
 public class Main {
