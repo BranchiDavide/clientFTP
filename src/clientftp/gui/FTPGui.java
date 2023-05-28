@@ -30,6 +30,7 @@ public class FTPGui {
     private JMenu settingsMenu = new JMenu("Settings");
     private JButton disconnectMenu = new JButton("Disconnect");
     private JButton uploadMenu = new JButton("Upload");
+    private JButton refreshMenu = new JButton(new ImageIcon(new ImageIcon("Assets/refresh.png").getImage().getScaledInstance(15, 15,  java.awt.Image.SCALE_SMOOTH)));
     private JMenuItem setDwPath = new JMenuItem("Set download path");
     private JProgressBar pb = new JProgressBar();
     private boolean areEventsDisabled = false;
@@ -37,6 +38,7 @@ public class FTPGui {
     private JFileChooser fChooser = new JFileChooser();
     public FTPGui(String name, FTPManager ftpManager){
         this.ftpManager = ftpManager;
+        ftpManager.setPb(pb);;
         frame = new JFrame(name);
         frame.setVisible(true);
         frame.setLayout(new BorderLayout());
@@ -50,6 +52,8 @@ public class FTPGui {
         menuBar.add(uploadMenu);
         menuBar.add(new JLabel("       "));
         menuBar.add(disconnectMenu);
+        menuBar.add(new JLabel("       "));
+        menuBar.add(refreshMenu);
         menuBar.add(new JLabel("       "));
         menuBar.add(displaiedPath);
         fChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -125,7 +129,7 @@ public class FTPGui {
                     public void run() {
                         try {
                             areEventsDisabled = true;
-                            ftpManager.downloadFileFromGUI(rowClickIndex, pb);
+                            ftpManager.downloadFileFromGUI(rowClickIndex);
                             if(ftpManager.getFile(rowClickIndex).isDirectory()){
                                 showSuccess("Download successful", "The directory " + ftpManager.getFile(rowClickIndex).getName()
                                         + " has been downloaded successfully!\n" + ftpManager.getDownloadPath() + ftpManager.getFile(rowClickIndex).getName());
@@ -179,26 +183,53 @@ public class FTPGui {
         uploadMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int choice = fChooser.showOpenDialog(null);
-                if(choice == JFileChooser.APPROVE_OPTION){
-                    File fileSelected = fChooser.getSelectedFile();
-                    try{
-                        if(fileSelected.isDirectory()){
-                            ftpManager.uploadDirectory(ftpManager.getFtpPathString() + fileSelected.getName(),fileSelected);
-                            showSuccess("Upload successful", "The directory " + fileSelected.getName()
-                                    + " has been uploaded successfully!\n" + ftpManager.getFtpPathString() + fileSelected.getName());
+                //Thread for the file and directory upload
+                Thread trd = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        int choice = fChooser.showOpenDialog(null);
+                        if(choice == JFileChooser.APPROVE_OPTION){
+                            File fileSelected = fChooser.getSelectedFile();
+                            try{
+                                if(fileSelected != null){
+                                    areEventsDisabled = true;
+                                    ftpManager.setTmpProgress(0);
+                                    if(fileSelected.isDirectory()){
+                                        pb.setForeground(Color.BLUE);
+                                        pb.setValue(0);
+                                        pb.setVisible(true);
+                                        pb.setMaximum(ftpManager.getLocalDirTotalFiles(fileSelected.getAbsolutePath()));
+                                        ftpManager.uploadDirectory(ftpManager.getFtpPathString() + fileSelected.getName(),fileSelected);
+                                        showSuccess("Upload successful", "The directory " + fileSelected.getName()
+                                                + " has been uploaded successfully!\n" + ftpManager.getFtpPathString() + fileSelected.getName());
 
-                        }else{
-                            ftpManager.uploadFile(ftpManager.getFtpPathString() + fileSelected.getName(), fileSelected);
-                            showSuccess("Upload successful", "The file " + fileSelected.getName()
-                                    + " has been uploaded successfully!\n" + ftpManager.getFtpPathString() + fileSelected.getName());
+                                    }else{
+                                        ftpManager.uploadFile(ftpManager.getFtpPathString() + fileSelected.getName(), fileSelected);
+                                        showSuccess("Upload successful", "The file " + fileSelected.getName()
+                                                + " has been uploaded successfully!\n" + ftpManager.getFtpPathString() + fileSelected.getName());
+                                    }
+                                    updateTable();
+                                }
+                            }catch(IOException ex){
+                                showError("Upload error", "Unable to upload the file or the directory");
+                            }finally{
+                                areEventsDisabled = false;
+                                pb.setVisible(false);
+                            }
                         }
-                        updateTable();
-                    }catch(IOException ex){
-                        showError("Upload error", "Unable to upload the file or the directory");
                     }
+                });
+                trd.start();
+            }
+        });
+        refreshMenu.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    updateTable();
+                } catch (IOException ex) {
+                    showError("Update error", "Unable to update the file table");
                 }
-
             }
         });
     }

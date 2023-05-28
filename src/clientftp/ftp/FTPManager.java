@@ -24,6 +24,7 @@ public class FTPManager {
     private JProgressBar pb;
     public FTPManager(FTPClient ftp) throws IOException {
         this.ftp = ftp;
+        this.pb = pb;
         ftpPath = new ArrayList<>();
         ftpPath.add("/");
         //Load settings from settings.xml file
@@ -114,19 +115,16 @@ public class FTPManager {
         }
     }
 
-    public void downloadFileFromGUI(int index, JProgressBar pb) throws IOException {
-        this.pb = pb;
+    public void downloadFileFromGUI(int index) throws IOException {
         tmpProgress = 0;
-        pb.setVisible(true);
-        pb.setValue(0);
-        pb.setForeground(Color.GREEN);
         if(contentList.get(index).isDirectory()){
+            pb.setVisible(true);
+            pb.setValue(0);
+            pb.setForeground(Color.GREEN);
             pb.setMaximum(getDirTotalFiles(getFtpPathString() + contentList.get(index).getName()));
             downloadDir(getFtpPathString() + contentList.get(index).getName(), downloadPath + contentList.get(index).getName());
         }else{
-            pb.setMaximum(1);
             downloadFile(getFtpPathString() + contentList.get(index).getName(),downloadPath + contentList.get(index).getName());
-            pb.setValue(1);
         }
         pb.setVisible(false);
     }
@@ -219,6 +217,8 @@ public class FTPManager {
         InputStream is = new FileInputStream(file);
         ftp.storeFile(rPath, is);
         is.close();
+        tmpProgress++;
+        pb.setValue(tmpProgress);
     }
     public void uploadDirectory(String rPath, File directory) throws IOException {
         File[] files = directory.listFiles();
@@ -234,5 +234,31 @@ public class FTPManager {
                 }
             }
         }
+    }
+
+    public void setPb(JProgressBar pb) {
+        this.pb = pb;
+    }
+
+    public void setTmpProgress(int tmpProgress) {
+        this.tmpProgress = tmpProgress;
+    }
+    public int getLocalDirTotalFiles(String directoryPath) {
+        File directory = new File(directoryPath);
+        if (directory.exists() && directory.isDirectory()) {
+            File[] files = directory.listFiles();
+            if (files != null) {
+                int count = 0;
+                for (File file : files) {
+                    if (file.isFile()) {
+                        count++;
+                    } else if (file.isDirectory()) {
+                        count += getLocalDirTotalFiles(file.getAbsolutePath());
+                    }
+                }
+                return count;
+            }
+        }
+        return 0;
     }
 }
