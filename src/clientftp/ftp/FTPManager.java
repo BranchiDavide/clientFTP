@@ -261,4 +261,23 @@ public class FTPManager {
         }
         return 0;
     }
+    public void deleteFile(String rPath) throws IOException {
+        ftp.deleteFile(rPath);
+        tmpProgress++;
+        pb.setValue(tmpProgress);
+    }
+    public void deleteDirectory(String rPath) throws IOException {
+        FTPFile[] files = ftp.listFiles(rPath);
+        if (files != null) {
+            for (FTPFile file : files) {
+                String filePath = rPath + "/" + file.getName();
+                if (file.isDirectory()) {
+                    deleteDirectory(filePath);
+                } else {
+                    deleteFile(filePath);
+                }
+            }
+        }
+        ftp.removeDirectory(rPath);
+    }
 }

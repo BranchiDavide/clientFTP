@@ -24,6 +24,7 @@ public class FTPGui {
     private JPopupMenu clickPopup = new JPopupMenu();
     private JMenuItem infoMenu = new JMenuItem("Show more information");
     private JMenuItem downloadMenu = new JMenuItem("Download");
+    private JMenuItem deleteMenu = new JMenuItem("Delete");
     private int rowClickIndex = 0;
     private DefaultTableModel tableModel;
     private JMenuBar menuBar = new JMenuBar();
@@ -70,6 +71,7 @@ public class FTPGui {
         fileTable.setFont(new Font("Sans-Serif", Font.PLAIN, 14));
         clickPopup.add(infoMenu);
         clickPopup.add(downloadMenu);
+        clickPopup.add(deleteMenu);
         setTableModel();
         //Row click listener
         fileTable.addMouseListener(new MouseAdapter() {
@@ -107,7 +109,7 @@ public class FTPGui {
                         }
                     }
                 }else{
-                    showWarning("Operation in progress", "Please wait until the download/upload finishes");
+                    showWarning("Operation in progress", "Please wait until the download/upload/deletion finishes");
                 }
             }
         });
@@ -123,6 +125,7 @@ public class FTPGui {
         downloadMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 //Thread for the file and directory download
                 Thread trd = new Thread(new Runnable() {
                     @Override
@@ -232,6 +235,42 @@ public class FTPGui {
                 }
             }
         });
+        deleteMenu.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int choice = showQuestion("Delete confirm", "Are you sure you want to delete " + ftpManager.getFile(rowClickIndex).getName() + " ?");
+                if(choice == JOptionPane.YES_OPTION){
+                    //Thread for the file and directory deletion
+                    Thread trd = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try{
+                                if(ftpManager.getFile(rowClickIndex).isDirectory()){
+                                    areEventsDisabled = true;
+                                    ftpManager.setTmpProgress(0);
+                                    pb.setForeground(Color.RED);
+                                    pb.setValue(0);
+                                    pb.setVisible(true);
+                                    pb.setMaximum(ftpManager.getDirTotalFiles(ftpManager.getFtpPathString() + "/" + ftpManager.getFile(rowClickIndex).getName()));
+                                    ftpManager.deleteDirectory(ftpManager.getFtpPathString() + "/" + ftpManager.getFile(rowClickIndex).getName());
+                                    showSuccess("Deletion successful", "The directory " + ftpManager.getFile(rowClickIndex).getName() + " has been deleted successfully!");
+                                }else{
+                                    ftpManager.deleteFile(ftpManager.getFtpPathString() + "/" + ftpManager.getFile(rowClickIndex).getName());
+                                    showSuccess("Deletion successful", "The file " + ftpManager.getFile(rowClickIndex).getName() + " has been deleted successfully!");
+                                }
+                                updateTable();
+                            }catch(IOException ex){
+                                ex.printStackTrace();
+                            }finally{
+                                areEventsDisabled = false;
+                                pb.setVisible(false);
+                            }
+                        }
+                    });
+                    trd.start();
+                }
+            }
+        });
     }
     private void setTableModel(){
         //Model for making table cells not editable
@@ -266,6 +305,10 @@ public class FTPGui {
         UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         JOptionPane.showMessageDialog(frame, message,
                 header, JOptionPane.WARNING_MESSAGE);
+    }
+    public int showQuestion(String header, String message){
+        UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
+        return JOptionPane.showConfirmDialog(null, message, header, JOptionPane.YES_NO_OPTION);
     }
     private void updateTable() throws IOException {
         data = ftpManager.getFiles();
