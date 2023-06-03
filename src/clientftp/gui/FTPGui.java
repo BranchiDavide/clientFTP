@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import clientftp.exceptions.FTPOperationException;
 import clientftp.ftp.FTPManager;
 import clientftp.Main;
 
@@ -64,8 +65,8 @@ public class FTPGui {
         try{
             data = ftpManager.getFiles();
             fileTable = new JTable(data, columnNames);
-        }catch(Exception e){
-            showError("Loading Error", "Unable to load the table");
+        }catch(FTPOperationException e){
+            showError("Loading Error", e.getMessage());
         }
         frame.add(new JScrollPane(fileTable), BorderLayout.CENTER);
         fileTable.setFont(new Font("Sans-Serif", Font.PLAIN, 14));
@@ -103,8 +104,8 @@ public class FTPGui {
                                 //Update the table
                                 updateTable();
                                 displaiedPath.setText("Remote path: " + ftpManager.getFtpPathString());
-                            }catch(IOException ex){
-                                showError("Change Directory Error", "Unable to enter the directory");
+                            }catch(FTPOperationException ex){
+                                showError("Error", ex.getMessage());
                             }
                         }
                     }
@@ -142,7 +143,7 @@ public class FTPGui {
                                         + " has been downloaded successfully!\n" + ftpManager.getDownloadPath() + ftpManager.getFile(rowClickIndex).getName());
 
                             }
-                        } catch (IOException ex) {
+                        } catch (FTPOperationException ex) {
                             showError("Download error", "Unable to download the file or the directory");
                         }finally{
                             areEventsDisabled = false;
@@ -162,7 +163,7 @@ public class FTPGui {
                     if(Files.exists(Paths.get(path)) && path.length() > 0){
                         try{
                             ftpManager.setDownloadPath(path);
-                        }catch(IOException ex){
+                        }catch(FTPOperationException ex){
                             showError("Settings error", "Unable to write settings file");
                         }
                     }else{
@@ -178,7 +179,7 @@ public class FTPGui {
                     ftpManager.disconnectFromServer();
                     frame.dispose();
                     new Main().main(new String[0]);
-                } catch (IOException ex) {
+                } catch (FTPOperationException ex) {
                     showError("Disconnection error", "Unable to disconnect from the server");
                 }
             }
@@ -213,7 +214,7 @@ public class FTPGui {
                                     }
                                     updateTable();
                                 }
-                            }catch(IOException ex){
+                            }catch(FTPOperationException ex){
                                 showError("Upload error", "Unable to upload the file or the directory");
                             }finally{
                                 areEventsDisabled = false;
@@ -230,7 +231,7 @@ public class FTPGui {
             public void actionPerformed(ActionEvent e) {
                 try {
                     updateTable();
-                } catch (IOException ex) {
+                } catch (FTPOperationException ex) {
                     showError("Update error", "Unable to update the file table");
                 }
             }
@@ -259,7 +260,7 @@ public class FTPGui {
                                     showSuccess("Deletion successful", "The file " + ftpManager.getFile(rowClickIndex).getName() + " has been deleted successfully!");
                                 }
                                 updateTable();
-                            }catch(IOException ex){
+                            }catch(FTPOperationException ex){
                                 ex.printStackTrace();
                             }finally{
                                 areEventsDisabled = false;
@@ -310,7 +311,7 @@ public class FTPGui {
         UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         return JOptionPane.showConfirmDialog(null, message, header, JOptionPane.YES_NO_OPTION);
     }
-    private void updateTable() throws IOException {
+    private void updateTable() throws FTPOperationException {
         data = ftpManager.getFiles();
         tableModel.setRowCount(0);
         for(Object[] row : data){

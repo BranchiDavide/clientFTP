@@ -1,5 +1,6 @@
 package clientftp.gui;
 
+import clientftp.exceptions.FTPOperationException;
 import org.apache.commons.net.ftp.FTPFile;
 
 import javax.swing.*;
@@ -60,8 +61,7 @@ public class FileInfoGui {
                 public void run() {
                     try {
                         loadDirSize();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    } catch (FTPOperationException e) {
                         throw new RuntimeException(e);
                     }
                 }
@@ -69,7 +69,7 @@ public class FileInfoGui {
             trd.start();
         }
     }
-    private void loadDirSize() throws IOException {
+    private void loadDirSize() throws FTPOperationException {
         fileSize.setText("File size: " + ftpManager.formatSize(ftpManager.getDirTotalSize(ftpManager.getFtpPathString()
                 + "/" + file.getName())) + " | Total files: " + ftpManager.getDirTotalFiles(ftpManager.getFtpPathString() + "/" + file.getName()));
     }

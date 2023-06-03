@@ -4,6 +4,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import clientftp.exceptions.FTPConnectionException;
+import clientftp.exceptions.FTPOperationException;
+import clientftp.exceptions.FTPSettingsLoadingException;
 import clientftp.ftp.FTPConnection;
 import clientftp.ftp.FTPManager;
 
@@ -57,7 +61,15 @@ public class ConnectionGui {
                     FTPManager ftpManager = new FTPManager(c.getFtp());
                     new FTPGui("FTP Session - Connected to: " + serverAddress.getText() + " logged in as: " + username.getText(), ftpManager);
                     frame.setVisible(false);
-                }catch(Exception ex){
+                }catch(FTPConnectionException ex){
+                    errorLabel.setFont(new Font("Sans-Serif", Font.BOLD, 12));
+                    errorLabel.setForeground(Color.RED);
+                    errorLabel.setText(ex.getMessage());
+                } catch (FTPSettingsLoadingException ex) {
+                    errorLabel.setFont(new Font("Sans-Serif", Font.BOLD, 12));
+                    errorLabel.setForeground(Color.RED);
+                    errorLabel.setText(ex.getMessage());
+                } catch (FTPOperationException ex) {
                     errorLabel.setFont(new Font("Sans-Serif", Font.BOLD, 12));
                     errorLabel.setForeground(Color.RED);
                     errorLabel.setText(ex.getMessage());

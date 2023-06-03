@@ -1,7 +1,10 @@
 package clientftp.ftp;
 
+import clientftp.exceptions.FTPConnectionException;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
+
+import java.io.IOException;
 
 public class FTPConnection {
     private String username;
@@ -9,35 +12,36 @@ public class FTPConnection {
     private String serverAddress;
     private int serverPort;
     private FTPClient ftp;
-    public FTPConnection(String username, String password, String serverAddress, String serevrPort) throws Exception {
-        setUsername(username.trim());
-        setPassword(password);
+    public FTPConnection(String username, String password, String serverAddress, String serevrPort) throws FTPConnectionException {
         setServerAddress(serverAddress.trim());
         try{
             setServerPort(Integer.parseInt(serevrPort.trim()));
         }catch(NumberFormatException e){
-            throw new Exception("Invalid port number");
+            throw new FTPConnectionException("Invalid port number");
         }
+        setUsername(username.trim());
+        setPassword(password);
         ftp = new FTPClient();
     }
-    public void connect() throws Exception {
-        try{
+    public void connect() throws FTPConnectionException {
+        try {
             ftp.connect(serverAddress, serverPort);
             int replyCode = ftp.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
-                throw new Exception("Unable to connect to the server, please check address and port");
+                throw new FTPConnectionException("Unable to connect to the server, please check address and port");
             }
-        }catch (Exception e){
-            throw new Exception("Unable to connect to the server, please check address and port");
+        }catch(IOException ex){
+            throw new FTPConnectionException("Unable to connect to the server, please check address and port");
         }
+
         try{
             ftp.login(username, password);
             int replyCode = ftp.getReplyCode();
             if (!FTPReply.isPositiveCompletion(replyCode)) {
-                throw new Exception("Unable to login to the server, please check username and password");
+                throw new FTPConnectionException("Unable to login to the server, please check username and password");
             }
-        }catch(Exception e){
-            throw new Exception("Unable to login to the server, please check username and password");
+        }catch(IOException ex){
+            throw new FTPConnectionException("Unable to login to the server, please check username and password");
         }
     }
 
@@ -45,9 +49,9 @@ public class FTPConnection {
         return username;
     }
 
-    public void setUsername(String username) throws Exception {
+    public void setUsername(String username) throws FTPConnectionException {
         if(username.equals("")){
-            throw new Exception("Please insert the username");
+            throw new FTPConnectionException("Please insert the username");
         }else{
             this.username = username;
         }
@@ -57,9 +61,9 @@ public class FTPConnection {
         return password;
     }
 
-    public void setPassword(String password) throws Exception {
+    public void setPassword(String password) throws FTPConnectionException {
         if(password.equals("")){
-            throw new Exception("Please insert the password");
+            throw new FTPConnectionException("Please insert the password");
         }else{
             this.password = password;
         }
@@ -69,9 +73,9 @@ public class FTPConnection {
         return serverAddress;
     }
 
-    public void setServerAddress(String serverAddress) throws Exception {
+    public void setServerAddress(String serverAddress) throws FTPConnectionException {
         if(serverAddress.equals("")){
-            throw new Exception("Please insert the server address");
+            throw new FTPConnectionException("Please insert the server address");
         }else{
             this.serverAddress = serverAddress;
         }
@@ -81,9 +85,9 @@ public class FTPConnection {
         return serverPort;
     }
 
-    public void setServerPort(int serverPort) throws Exception {
+    public void setServerPort(int serverPort) throws FTPConnectionException {
         if(serverPort <= 0 || serverPort >= 65535){
-            throw new Exception("Invalid port number");
+            throw new FTPConnectionException("Invalid port number");
         }else{
             this.serverPort = serverPort;
         }
