@@ -11,6 +11,15 @@ import clientftp.exceptions.FTPSettingsLoadingException;
 import clientftp.ftp.FTPConnection;
 import clientftp.ftp.FTPManager;
 
+/**
+ * Classe ConnectionGui che visualizza la finestra per poter effettuare
+ * una nuova connessione a un server FTP. La finestra contiene 4 input che
+ * permettono all'utente di specificare l'indirizzo del server, la porta,
+ * lo username e la password di accesso.
+ *
+ * @author Davide Branchi
+ * @version 04.06.2023
+ */
 public class ConnectionGui {
     private JFrame frame = new JFrame("FTP Client - Connection");
     private JPanel mainPanel = new JPanel(new GridLayout(15,1));
@@ -24,6 +33,10 @@ public class ConnectionGui {
     private JPasswordField password = new JPasswordField();
     private JButton connect = new JButton("Connect");
     private JLabel errorLabel = new JLabel("", SwingConstants.CENTER);
+
+    /**
+     * Metodo costruttore della classe che genera la finestra.
+     */
     public ConnectionGui(){
         frame.setSize(400,400);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

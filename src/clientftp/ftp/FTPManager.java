@@ -1,6 +1,5 @@
 package clientftp.ftp;
 
-import clientftp.exceptions.FTPConnectionException;
 import clientftp.exceptions.FTPOperationException;
 import clientftp.exceptions.FTPSettingsLoadingException;
 import org.apache.commons.net.ftp.FTP;

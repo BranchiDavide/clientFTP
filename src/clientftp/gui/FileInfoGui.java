@@ -1,15 +1,23 @@
 package clientftp.gui;
 
 import clientftp.exceptions.FTPOperationException;
+import clientftp.ftp.FTPManager;
+
 import org.apache.commons.net.ftp.FTPFile;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 
-import clientftp.ftp.FTPManager;
-
+/**
+ * Classe FileInfoGui che genera una finestra con delle informazioni
+ * aggiuntive di un file o di una cartella.
+ * Nella GUI viene mostrato il nome del file, il tipo del file,
+ * la sua dimensione, l'ultima data di modifica, i permessi, il proprietario e il gruppo.
+ *
+ * @author Davide Branchi
+ * @version 04.06.2023
+ */
 public class FileInfoGui {
     private JFrame frame;
     private FTPFile file;
@@ -23,7 +31,15 @@ public class FileInfoGui {
     private JLabel group;
     private ImageIcon icn;
     private Image scaleImage;
-    public FileInfoGui(FTPFile file, FTPManager ftpManager) throws IOException {
+
+    /**
+     * Metodo costruttore della classe che genera la finestra con le
+     * informazioni aggiuntive di un file o di una cartella.
+     * @param file file o cartella di cui mostrate le informazioni
+     * @param ftpManager oggetto FTPManager per andare a recuperare le informazioni dal server
+     * @throws FTPOperationException
+     */
+    public FileInfoGui(FTPFile file, FTPManager ftpManager) throws FTPOperationException {
         this.file = file;
         this.ftpManager = ftpManager;
         frame = new JFrame(file.getName() + " - information");
@@ -55,7 +71,10 @@ public class FileInfoGui {
         frame.add(group);
         frame.setVisible(true);
         if(file.isDirectory()){
-            //New thread for loading the directory size without blocking the GUI loading
+            /*
+            Creazione di un nuovo thread per caricare la dimensione di una
+            cartella senza bloccare l'esecuzione di tutto il programma.
+             */
             Thread trd = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -69,6 +88,12 @@ public class FileInfoGui {
             trd.start();
         }
     }
+
+    /**
+     * Metodo utilizzato per caricare la dimensione in byte e il numero di files
+     * totali contenuti in una cartella.
+     * @throws FTPOperationException
+     */
     private void loadDirSize() throws FTPOperationException {
         fileSize.setText("File size: " + ftpManager.formatSize(ftpManager.getDirTotalSize(ftpManager.getFtpPathString()
                 + "/" + file.getName())) + " | Total files: " + ftpManager.getDirTotalFiles(ftpManager.getFtpPathString() + "/" + file.getName()));

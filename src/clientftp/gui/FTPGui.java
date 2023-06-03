@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -118,7 +117,7 @@ public class FTPGui {
             public void actionPerformed(ActionEvent e) {
                 try{
                     FileInfoGui fig = new FileInfoGui(ftpManager.getFile(rowClickIndex), ftpManager);
-                }catch(IOException ex){
+                }catch(FTPOperationException ex){
                     showError("Information error", "Unable to load some or all the information");
                 }
             }
