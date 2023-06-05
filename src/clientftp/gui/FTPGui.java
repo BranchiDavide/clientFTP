@@ -15,6 +15,14 @@ import clientftp.exceptions.FTPOperationException;
 import clientftp.ftp.FTPManager;
 import clientftp.Main;
 
+/**
+ * Classe FTPGui che genera la finestra dove l'utente può interagire con il server FTP.
+ * In questa classe vengono anche ascoltati tutti gli eventi dell'utente ad esempio nel caso
+ * l'utente volesse effettuare il download/upload/eliminazione di un file o di una cartella.
+ *
+ * @author Davide Branchi
+ * @version 04.06.2023
+ */
 public class FTPGui {
     private JFrame frame;
     private String[][] data;
@@ -37,6 +45,13 @@ public class FTPGui {
     private boolean areEventsDisabled = false;
     private JLabel displaiedPath = new JLabel("Remote path: /");
     private JFileChooser fChooser = new JFileChooser();
+
+    /**
+     * Metodo costruttore della classe in cui viene generata la GUI
+     * e dove vengono ascoltate tutte le interazioni dell'utente
+     * @param name nome della finestra
+     * @param ftpManager oggetto FTPManager che viene utilizzato per effettuare tutte le operazioni sul server FTP
+     */
     public FTPGui(String name, FTPManager ftpManager){
         this.ftpManager = ftpManager;
         ftpManager.setPb(pb);;
@@ -73,7 +88,9 @@ public class FTPGui {
         clickPopup.add(downloadMenu);
         clickPopup.add(deleteMenu);
         setTableModel();
-        //Row click listener
+        /*
+        Action listener per il click dell'utente su una riga della tabella
+         */
         fileTable.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -113,6 +130,10 @@ public class FTPGui {
                 }
             }
         });
+        /*
+        Action listener per il click dell'utente sul menu per visualizzare
+        informazioni aggiuntive su un file o una cartella
+         */
         infoMenu.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
                 try{
@@ -122,11 +143,15 @@ public class FTPGui {
                 }
             }
         });
+        /*
+        Action listener per il click dell'utente sul menu di download
+         */
         downloadMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
-                //Thread for the file and directory download
+                /*
+                Thread per non bloccare tutto il programma durante il download di un file o di una cartella
+                 */
                 Thread trd = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -153,6 +178,9 @@ public class FTPGui {
                 trd.start();
             }
         });
+        /*
+        Action listener per il click dell'utente sul menu per impostare il percorso locale di download
+         */
         setDwPath.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -171,6 +199,9 @@ public class FTPGui {
                 }
             }
         });
+        /*
+        Action listener per il click dell'utente sul menu per disconnettersi dal server
+         */
         disconnectMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -183,10 +214,15 @@ public class FTPGui {
                 }
             }
         });
+        /*
+        Action listener per il click dell'utente sul menu per caricare un file o una cartella
+         */
         uploadMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //Thread for the file and directory upload
+                /*
+                Thread per non bloccare tutto il programma durante l'upload di un file o di una cartella
+                 */
                 Thread trd = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -225,6 +261,10 @@ public class FTPGui {
                 trd.start();
             }
         });
+        /*
+        Action listener per il click dell'utente sull'icona per fare il refresh della
+        tabella in cui vengono visualizzati i file e le cartelle
+         */
         refreshMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -235,12 +275,17 @@ public class FTPGui {
                 }
             }
         });
+        /*
+        Action listener per il click dell'utente sul menu per eliminare un file o una cartella
+         */
         deleteMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int choice = showQuestion("Delete confirm", "Are you sure you want to delete " + ftpManager.getFile(rowClickIndex).getName() + " ?");
                 if(choice == JOptionPane.YES_OPTION){
-                    //Thread for the file and directory deletion
+                    /*
+                    Thread per non bloccare tutto il programma durante l'eliminazione di un file o di una cartella
+                     */
                     Thread trd = new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -272,6 +317,10 @@ public class FTPGui {
             }
         });
     }
+
+    /**
+     * Metodo invocato nel costruttore che imposta il modello della tabella
+     */
     private void setTableModel(){
         //Model for making table cells not editable
         tableModel = new DefaultTableModel(data, columnNames) {
@@ -291,25 +340,55 @@ public class FTPGui {
         fileTable.getColumnModel().getColumn(3).setMinWidth(200);
         fileTable.getColumnModel().getColumn(3).setMaxWidth(200);
     }
+
+    /**
+     * Metodo che mostra una finestra con un messaggio di errore
+     * @param header titolo della finestra
+     * @param message messaggio di errore
+     */
     public void showError(String header, String message){
         UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         JOptionPane.showMessageDialog(frame, message,
                 header, JOptionPane.ERROR_MESSAGE);
     }
+
+    /**
+     * Metodo che mostra una finestra con un messaggio di successo
+     * @param header titolo della finestra
+     * @param message messaggio di successo
+     */
     public void showSuccess(String header, String message){
         UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         JOptionPane.showMessageDialog(frame, message,
                 header, JOptionPane.INFORMATION_MESSAGE);
     }
+
+    /**
+     * Metodo che mostra una finestra con un avviso
+     * @param header titolo della finestra
+     * @param message messaggio di avviso
+     */
     public void showWarning(String header, String message){
         UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         JOptionPane.showMessageDialog(frame, message,
                 header, JOptionPane.WARNING_MESSAGE);
     }
+
+    /**
+     * Metodo che mostra una finestra di dialogo con l'utente dove può selezionare un'opzione fra "Yes" e "Cancel"
+     * @param header titolo della finestra
+     * @param message messaggio da visualizzare
+     * @return int rappresentante la scelta dell'utente
+     */
     public int showQuestion(String header, String message){
         UIManager.put("OptionPane.minimumSize",new Dimension(100,100));
         return JOptionPane.showConfirmDialog(null, message, header, JOptionPane.YES_NO_OPTION);
     }
+
+    /**
+     * Metodo che aggiorna la tabella in cui vengono visualizzati i files e le cartelle
+     * @throws FTPOperationException
+     */
     private void updateTable() throws FTPOperationException {
         data = ftpManager.getFiles();
         tableModel.setRowCount(0);
