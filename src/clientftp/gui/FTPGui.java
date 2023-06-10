@@ -1,5 +1,6 @@
 package clientftp.gui;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -8,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -58,6 +60,11 @@ public class FTPGui {
         frame = new JFrame(name);
         frame.setVisible(true);
         frame.setLayout(new BorderLayout());
+        try{
+            frame.setIconImage(ImageIO.read(new File("Assets/icon.png")));
+        }catch(IOException ex){
+            System.out.println("Unable to load the app icon");
+        }
         settingsMenu.add(setDwPath);
         menuBar.add(settingsMenu);
         frame.add(menuBar, BorderLayout.NORTH);

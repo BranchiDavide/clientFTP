@@ -1,0 +1,139 @@
+@startuml
+package clientftp{
+    class Main{
+        + main(String[] args): void
+    }
+    package exceptions{
+        class FTPConnectionException{
+            + FTPConnectionException(String message): void
+        }
+        class FTPOperationException{
+            + FTPOperationException(String message): void
+        }
+        class FTPSettingsLoadingException{
+            + FTPSettingsLoadingException(String message): void
+        }
+    }
+    package gui{
+        class ConnectionGui{
+            - frame: JFrame
+            - mainPanel: JPanel
+            - serverAddressLabel: JLabel
+            - serverPortLabel: JLabel
+            - serverAddress: JTextField
+            - serverPort: JTextField
+            - usernameLabel: JLabel
+            - passwordLabel: JLabel
+            - username: JTextField
+            - password: JPasswordField
+            - connect: JButton
+            - errorLabel: JLabel
+            + ConnectionGui(): void
+        }
+        class FileInfoGui{
+            - frame: JFrame
+            - file: FTPFile
+            - ftpManager: FTPManager
+            - fileName: JLabel
+            - fileType: JLabel
+            - fileSize: JLabel
+            - lastModified: JLabel
+            - permission: JLabel
+            - owner: JLabel
+            - group: JLabel
+            + FileInfoGui(FTPFile file, FTPManager ftpManager): void
+            - loadDirSize(): void
+        }
+        class FTPGui{
+            - frame: JFrame
+            - data: String[][]
+            - columnNames: Strung[][]
+            - fileTable: JTable
+            - ftpManager: FTPManager
+            - clickPopup: JPopupMenu
+            - infoMenu: JMenuItem
+            - downloadMenu: JMenuItem
+            - deleteMenu: JMenuItem
+            - rowClickIndex: int
+            - tableModel: DefaultTableModel
+            - menuBar: JMenuBar
+            - settingsMenu: JMenu
+            - disconnectMenu: JButton
+            - uploadMenu: JButton
+            - refreshMenu: JButton
+            - setDwPath: JMenuItem
+            - pb: JProgressBar
+            - areEventsDisabled: boolean
+            - displaiedPath: JLabel
+            - fChooser: JFileChooser
+            + FTPGui(String name, FTPManager ftpManager): void
+            - setTableModel(): void
+            + showError(String header, String message): void
+            + showSuccess(String header, String message): void
+            + showWarning(String header, String message): void
+            + showQuestion(String header, String message): void
+            - updateTable(): void
+        }
+    }
+    package ftp{
+        class FTPConnection{
+            - username: String
+            - password: String
+            - serverAddress: String
+            - serverPort: int
+            - ftp: FTPClient
+            + FTPConnection(String username, String password, String serverAddress, String serevrPort): void
+            + connect(): void
+            + getUsername():String
+            + setUsername(String username): void
+            + getPassword(): String
+            + setPassword(String password): void
+            + getServerAddress(): String
+            + setServerAddress(String serverAddress): void
+            + getServerPort(): int
+            + setServerPort(int serverPort): void
+            + getFtp(): FTPClient
+            + setFtp(FTPClient ftp): void
+        }
+        class FTPManager{
+            - ftp: FTPClient
+            - tableContent: String[][]
+            - ftpFiles: FTPFile[]
+            - contentList: ArrayList<FTPFile>
+            - ftpPath: ArrayList<String>
+            - downloadPath: String
+            - tmpProgress: int
+            - pb: JProgressBar
+            + FTPManager(FTPClient ftp): void
+            + getFiles(): String[][]
+            + formatSize(long size): String
+            + getFile(int index): FTPFile
+            + changeDir(String path): void
+            + downloadFileFromGUI(int index): void
+            - downloadDir(String rPath, String lPath): void
+            - downloadFile(String rPath, String lPath): void
+            + getDownloadPath(): String
+            + setDownloadPath(String downloadPath): void
+            + getFtpPathString(): String
+            + getDirTotalSize(String rPath): long
+            + getDirTotalFiles(String rPath): int
+            + disconnectFromServer(): void
+            + uploadFile(String rPath, File file): void
+            + uploadDirectory(String rPath, File directory): void
+            + setPb(JProgressBar pb): void
+            + setTmpProgress(int tmpProgress): void
+            + getLocalDirTotalFiles(String directoryPath): int
+            + deleteFile(String rPath): void
+            + deleteDirectory(String rPath): void
+        }
+    }
+}
+Main"1"--"1"ConnectionGui
+ConnectionGui"1"--"1"FTPConnection
+ConnectionGui"1"--"1"FTPManager
+ConnectionGui"1"--"1"FTPGui
+FTPConnection"1"--"1"FTPConnectionException
+FTPManager"1"--"1"FTPOperationException
+FTPManager"1"--"1"FTPSettingsLoadingException
+FTPGui"1"--"1"FileInfoGui
+@enduml

@@ -5,8 +5,11 @@ import clientftp.ftp.FTPManager;
 
 import org.apache.commons.net.ftp.FTPFile;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 
 /**
@@ -45,6 +48,11 @@ public class FileInfoGui {
         frame = new JFrame(file.getName() + " - information");
         frame.setSize(400,500);
         frame.setResizable(false);
+        try{
+            frame.setIconImage(ImageIO.read(new File("Assets/icon.png")));
+        }catch(IOException ex){
+            System.out.println("Unable to load the app icon");
+        }
         frame.setLayout(new GridLayout(8,1));
         fileName = new JLabel("File name: " + file.getName());
         fileType = new JLabel("File type: " + (file.isDirectory() ? "Directory" : "File"));

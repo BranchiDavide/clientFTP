@@ -1,9 +1,12 @@
 package clientftp.gui;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
 
 import clientftp.exceptions.FTPConnectionException;
 import clientftp.exceptions.FTPOperationException;
@@ -13,7 +16,7 @@ import clientftp.ftp.FTPManager;
 
 /**
  * Classe ConnectionGui che visualizza la finestra per poter effettuare
- * una nuova connessione a un server FTP. La finestra contiene 4 input che
+ * una nuova connessione a un server FTP. La finestra contiene quattro input che
  * permettono all'utente di specificare l'indirizzo del server, la porta,
  * lo username e la password di accesso.
  *
@@ -46,6 +49,11 @@ public class ConnectionGui {
         JLabel i = new JLabel("New FTP Connection", SwingConstants.CENTER);
         i.setFont(new Font("Sans-Serif", Font.BOLD, 20));
         frame.add(i, BorderLayout.NORTH);
+        try{
+            frame.setIconImage(ImageIO.read(new File("Assets/icon.png")));
+        }catch(IOException ex){
+            System.out.println("Unable to load the app icon");
+        }
         mainPanel.add(new JLabel());
         mainPanel.add(serverAddressLabel);
         mainPanel.add(serverAddress);

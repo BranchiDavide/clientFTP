@@ -131,7 +131,7 @@ public class FTPManager {
     /**
      * Metodo che permette di formattare un numero long in una grandezza
      * di memoria (da Byte a Terabyte).
-     * @param size numero long che rappresenta l'occupazione dimemoria di un file o di una cartella.
+     * @param size numero long che rappresenta l'occupazione di memoria di un file o di una cartella.
      * @return stringa formattata con unità di misura.
      */
     public String formatSize(long size) {
@@ -227,7 +227,7 @@ public class FTPManager {
     }
 
     /**
-     * Metoco che scarica il file dal server FTP.
+     * Metodo che scarica il file dal server FTP.
      * @param rPath percorso remoto del file sul server FTP
      * @param lPath percorso locale in cui salvare il file
      * @throws FTPOperationException
@@ -253,7 +253,7 @@ public class FTPManager {
     }
 
     /**
-     * Metodo che permette di impostare il percorso di download locale
+     * Metodo che permette d'impostare il percorso di download locale
      * @param downloadPath percorso dove salvare i files e le cartelle scaricate
      * @throws FTPOperationException
      */
@@ -396,7 +396,7 @@ public class FTPManager {
     }
 
     /**
-     * Metodo che permette di impostare la ProgressBar che viene visualizzata dall'utente
+     * Metodo che permette d'impostare la ProgressBar che viene visualizzata dall'utente
      * quando carica/scarica/elimina un file o una cartella
      * @param pb oggetto JProgressBar che rappresenta la ProgressBar visualizzata sulla GUI
      */
@@ -405,7 +405,7 @@ public class FTPManager {
     }
 
     /**
-     * Metodo che permette di impostare il progresso temporaneo durante il
+     * Metodo che permette d'impostare il progresso temporaneo durante il
      * caricamento/scaricamento/eliminazione di un file o di una cartella
      * @param tmpProgress
      */

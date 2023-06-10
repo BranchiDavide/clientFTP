@@ -25,13 +25,13 @@ public class FTPConnection {
      * @param username nome utente da utilizzare per effettuare il login nel server FTP
      * @param password password dell'utente da utilizzare per effettuare il login nel server FTP
      * @param serverAddress indirizzo del server FTP
-     * @param serevrPort porta del server FTP
+     * @param serverPort porta del server FTP
      * @throws FTPConnectionException
      */
-    public FTPConnection(String username, String password, String serverAddress, String serevrPort) throws FTPConnectionException {
+    public FTPConnection(String username, String password, String serverAddress, String serverPort) throws FTPConnectionException {
         setServerAddress(serverAddress.trim());
         try{
-            setServerPort(Integer.parseInt(serevrPort.trim()));
+            setServerPort(Integer.parseInt(serverPort.trim()));
         }catch(NumberFormatException e){
             throw new FTPConnectionException("Invalid port number");
         }
@@ -164,7 +164,7 @@ public class FTPConnection {
      * effettuare la connessione e il login nel server FTP.
      * @param ftp oggetto FTPClient
      */
-    private void setFtp(FTPClient ftp) {
+    public void setFtp(FTPClient ftp) {
         this.ftp = ftp;
     }
 }
