@@ -108,17 +108,17 @@ public class FTPGui {
                     } else {
                         fileTable.clearSelection();
                     }
-                    int rowindex = fileTable.getSelectedRow();
-                    if (rowindex < 0)
+                    int rowIndex = fileTable.getSelectedRow();
+                    if (rowIndex < 0)
                         return;
                     if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
                         //Right click on table row
-                        if(!ftpManager.getFile(rowindex).getName().equals("..")){
+                        if(!ftpManager.getFile(rowIndex).getName().equals("..")){
                             clickPopup.show(e.getComponent(), e.getX(), e.getY());
                         }
-                        rowClickIndex = rowindex;
+                        rowClickIndex = rowIndex;
                     }else{
-                        rowClickIndex = rowindex;
+                        rowClickIndex = rowIndex;
                         //Left click on table row
                         if(ftpManager.getFile(rowClickIndex).isDirectory()){
                             try{
