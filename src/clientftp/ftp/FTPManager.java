@@ -11,6 +11,7 @@ import java.awt.*;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Properties;
@@ -34,6 +35,7 @@ public class FTPManager {
     private int tmpProgress = 0;
     private JProgressBar pb;
 
+    private ClassLoader classLoader;
     /**
      * Metodo costruttore della classe a cui deve essere passato come parametro
      * l'oggetto FTPClient per poter eseguire delle operazioni sul server FTP.
@@ -44,23 +46,17 @@ public class FTPManager {
      * @throws FTPOperationException
      */
     public FTPManager(FTPClient ftp) throws FTPSettingsLoadingException, FTPOperationException {
+        classLoader = Thread.currentThread().getContextClassLoader();
         this.ftp = ftp;
         this.pb = pb;
         ftpPath = new ArrayList<>();
         ftpPath.add("/");
         //Load settings from settings.xml file
-        Properties loadProps = new Properties();
         try{
-            loadProps.loadFromXML(new FileInputStream("settings.xml"));
-            String settingsPath = loadProps.getProperty("downloadPath");
-            if(settingsPath.equals("")){
-                Properties saveProps = new Properties();
-                saveProps.setProperty("downloadPath", System.getProperty("user.home") + "\\");
-                saveProps.storeToXML(new FileOutputStream("settings.xml"), "");
-                downloadPath = System.getProperty("user.home") + "\\";
-            }else{
-                downloadPath = settingsPath;
+            if(!Files.exists(Paths.get(System.getProperty("user.home") + "/.clientFTP/settings.xml"))){
+                createXmlSettingsFile();
             }
+            loadSettingsFromXml();
         }catch(IOException ex){
             throw new FTPSettingsLoadingException("Unable to load settings from file settings.xml");
         }
@@ -259,12 +255,12 @@ public class FTPManager {
      */
     public void setDownloadPath(String downloadPath) throws FTPOperationException {
         try{
-            if(!Character.toString(downloadPath.charAt(downloadPath.length()-1)).equals("\\")){
-                downloadPath += "\\";
+            if(!Character.toString(downloadPath.charAt(downloadPath.length()-1)).equals(File.separator)){
+                downloadPath += File.separator;
             }
             Properties saveProps = new Properties();
             saveProps.setProperty("downloadPath", downloadPath);
-            saveProps.storeToXML(new FileOutputStream("settings.xml"), "");
+            saveProps.storeToXML(new FileOutputStream(System.getProperty("user.home") + "/.clientFTP/settings.xml"), "");
             this.downloadPath = downloadPath;
         }catch(IOException ex){
             throw new FTPOperationException("Unable to set the download path");
@@ -475,6 +471,40 @@ public class FTPManager {
             ftp.removeDirectory(rPath);
         }catch(IOException ex){
             throw new FTPOperationException("Unable to delete the directory");
+        }
+    }
+
+    /**
+     * Metodo per creare il file xml con le preferenze dell'utente
+     * nella sua home nel caso non esista già
+     * @throws IOException
+     */
+    private void createXmlSettingsFile() throws IOException {
+        Files.createDirectories(Paths.get(System.getProperty("user.home") + "/.clientFTP"));
+        //ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        byte[] settingsContent = Files.readAllBytes(Paths.get("Assets/settings.xml.template"));
+        Files.write(Paths.get(System.getProperty("user.home") + "/.clientFTP/settings.xml"), settingsContent);
+        /*Files.copy(classLoader.getResourceAsStream("Assets/settings.xml.template"),
+                Paths.get(System.getProperty("user.home") + "/.clientFTP/settings.xml"),
+                StandardCopyOption.REPLACE_EXISTING);*/
+    }
+
+    /**
+     * Metodo per caricare le preferenze dell'utente dal file
+     * xml salvato nella sua home
+     * @throws IOException
+     */
+    private void loadSettingsFromXml() throws IOException {
+        Properties loadProps = new Properties();
+        loadProps.loadFromXML(new FileInputStream(System.getProperty("user.home") + "/.clientFTP/settings.xml"));
+        String settingsPath = loadProps.getProperty("downloadPath");
+        if(settingsPath.equals("")){
+            Properties saveProps = new Properties();
+            saveProps.setProperty("downloadPath", System.getProperty("user.home") + File.separator);
+            saveProps.storeToXML(new FileOutputStream(System.getProperty("user.home") + "/.clientFTP/settings.xml"), "");
+            downloadPath = System.getProperty("user.home") + File.separator;
+        }else{
+            downloadPath = settingsPath;
         }
     }
 }

@@ -42,7 +42,7 @@ public class FileInfoGui {
      * @param ftpManager oggetto FTPManager per andare a recuperare le informazioni dal server
      * @throws FTPOperationException
      */
-    public FileInfoGui(FTPFile file, FTPManager ftpManager) throws FTPOperationException {
+    public FileInfoGui(FTPFile file, FTPManager ftpManager) throws FTPOperationException, IOException {
         this.file = file;
         this.ftpManager = ftpManager;
         frame = new JFrame(file.getName() + " - information");
@@ -56,10 +56,13 @@ public class FileInfoGui {
         frame.setLayout(new GridLayout(8,1));
         fileName = new JLabel("File name: " + file.getName());
         fileType = new JLabel("File type: " + (file.isDirectory() ? "Directory" : "File"));
+        //ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         if(file.isDirectory()){
             icn = new ImageIcon("Assets/dir.png");
+            //icn = new ImageIcon(ImageIO.read(classLoader.getResourceAsStream("Assets/dir.png")));
         }else{
             icn = new ImageIcon("Assets/file.png");
+            //icn = new ImageIcon(ImageIO.read(classLoader.getResourceAsStream("Assets/file.png")));
         }
         scaleImage = icn.getImage().getScaledInstance(70, 70,Image.SCALE_DEFAULT);
         icn = new ImageIcon(scaleImage);

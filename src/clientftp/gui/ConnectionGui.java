@@ -49,8 +49,10 @@ public class ConnectionGui {
         JLabel i = new JLabel("New FTP Connection", SwingConstants.CENTER);
         i.setFont(new Font("Sans-Serif", Font.BOLD, 20));
         frame.add(i, BorderLayout.NORTH);
+        //ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try{
             frame.setIconImage(ImageIO.read(new File("Assets/icon.png")));
+            //frame.setIconImage(ImageIO.read(classLoader.getResourceAsStream("Assets/icon.png")));
         }catch(IOException ex){
             System.out.println("Unable to load the app icon");
         }
@@ -91,6 +93,10 @@ public class ConnectionGui {
                     errorLabel.setForeground(Color.RED);
                     errorLabel.setText(ex.getMessage());
                 } catch (FTPOperationException ex) {
+                    errorLabel.setFont(new Font("Sans-Serif", Font.BOLD, 12));
+                    errorLabel.setForeground(Color.RED);
+                    errorLabel.setText(ex.getMessage());
+                } catch (IOException ex) {
                     errorLabel.setFont(new Font("Sans-Serif", Font.BOLD, 12));
                     errorLabel.setForeground(Color.RED);
                     errorLabel.setText(ex.getMessage());

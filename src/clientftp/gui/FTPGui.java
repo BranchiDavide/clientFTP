@@ -42,6 +42,7 @@ public class FTPGui {
     private JButton disconnectMenu = new JButton("Disconnect");
     private JButton uploadMenu = new JButton("Upload");
     private JButton refreshMenu = new JButton(new ImageIcon(new ImageIcon("Assets/refresh.png").getImage().getScaledInstance(15, 15,  java.awt.Image.SCALE_SMOOTH)));
+    //private JButton refreshMenu = new JButton(new ImageIcon(new ImageIcon(ImageIO.read(Thread.currentThread().getContextClassLoader().getResourceAsStream("Assets/refresh.png"))).getImage().getScaledInstance(15, 15,  java.awt.Image.SCALE_SMOOTH)));
     private JMenuItem setDwPath = new JMenuItem("Set download path");
     private JProgressBar pb = new JProgressBar();
     private boolean areEventsDisabled = false;
@@ -54,7 +55,7 @@ public class FTPGui {
      * @param name nome della finestra
      * @param ftpManager oggetto FTPManager che viene utilizzato per effettuare tutte le operazioni sul server FTP
      */
-    public FTPGui(String name, FTPManager ftpManager){
+    public FTPGui(String name, FTPManager ftpManager) throws IOException {
         this.ftpManager = ftpManager;
         ftpManager.setPb(pb);;
         frame = new JFrame(name);
@@ -62,6 +63,7 @@ public class FTPGui {
         frame.setLayout(new BorderLayout());
         try{
             frame.setIconImage(ImageIO.read(new File("Assets/icon.png")));
+            //frame.setIconImage(ImageIO.read(Thread.currentThread().getContextClassLoader().getResourceAsStream("Assets/icon.png")));
         }catch(IOException ex){
             System.out.println("Unable to load the app icon");
         }
@@ -111,7 +113,7 @@ public class FTPGui {
                     int rowIndex = fileTable.getSelectedRow();
                     if (rowIndex < 0)
                         return;
-                    if (e.isPopupTrigger() && e.getComponent() instanceof JTable ) {
+                    if (e.getButton() == MouseEvent.BUTTON3) {
                         //Right click on table row
                         if(!ftpManager.getFile(rowIndex).getName().equals("..")){
                             clickPopup.show(e.getComponent(), e.getX(), e.getY());
@@ -147,6 +149,8 @@ public class FTPGui {
                     FileInfoGui fig = new FileInfoGui(ftpManager.getFile(rowClickIndex), ftpManager);
                 }catch(FTPOperationException ex){
                     showError("Information error", "Unable to load some or all the information");
+                } catch (IOException ex) {
+                    showError("Information error", "Unable to load icon");
                 }
             }
         });
